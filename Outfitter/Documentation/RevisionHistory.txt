@@ -26,6 +26,11 @@ Planned features and known bugs
 * BUG: End -> Shift-Home selects all but doesn't highlight properly
 * BUG: Trinket Queue fails when a trinket is already equipped or not found
 
+Version 6.0 changes
+
+* Adding Ascension TG credit: ᚛ᚎᚐᚅ᚜#7840
+* Adding Ascension spec change credit: ᚛ᚎᚐᚅ᚜#7840
+
 Version 5.0 planning
 
 * FEATURE: Script sharing/browsing within guilds
