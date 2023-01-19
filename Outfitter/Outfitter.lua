@@ -3201,7 +3201,18 @@ function Outfitter:WearOutfit(pOutfit, pLayerID, pCallerIsScript)
 	for i = 1, 20 do
 		if GetEquipmentSetInfo(i) == pOutfit:GetName() then
 			UseEquipmentSet(pOutfit:GetName())
+			if self:IsOpen() then
+				self:SelectOutfit(pOutfit)
+			end
 			return
+		else
+			if self:IsOpen() then
+				if self.OutfitStack:IsTopmostOutfit(pOutfit) then
+					self:SelectOutfit(pOutfit)
+				else
+					self:ClearSelection()
+				end
+			end
 		end
 	end
 
@@ -3247,13 +3258,7 @@ function Outfitter:WearOutfit(pOutfit, pLayerID, pCallerIsScript)
 	-- because the UI can't function correctly if the selected outfit and
 	-- top outfit don't stay the same.
 	
-	if self:IsOpen() then
-		if self.OutfitStack:IsTopmostOutfit(pOutfit) then
-			self:SelectOutfit(pOutfit)
-		else
-			self:ClearSelection()
-		end
-	end
+
 	
 	self:EndEquipmentUpdate("Outfitter:WearOutfit")
 end
