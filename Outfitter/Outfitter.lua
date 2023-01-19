@@ -237,7 +237,7 @@ Outfitter.Douchebags =
 		Argos = true,
 		Puldifrin = true,
 		Carebearslol = true,
-		["Núke"] = true,
+		["Nï¿½ke"] = true,
 		Tizzoke = true, -- "if i hear from a GM directly that what i am doing is against the rules, then i would stop"
 		Azarra = true, -- just an asshole
 		Rainbowblush = true, -- walking over other player's bobbers to help a friend win the fishing tournament? seriously? douchebag.
@@ -1818,7 +1818,25 @@ function Outfitter:DeleteSelectedOutfit()
 	self:Update(true)
 end
 
-function Outfitter:TalentsChanged()
+-- called when a spec change is started to notify when it ends
+function Outfitter:SpecChangeStarted(event, eventType, specID)
+	if event == "COMMENTATOR_SKIRMISH_QUEUE_REQUEST" and eventType ~= "ASCENSION_CA_SPECIALIZATION_ACTIVE_ID_CHANGED" then return end
+	self.EventLib:RegisterEvent("CHAT_MSG_SYSTEM", self.TalentsChanged, self)
+end
+
+-- function called when we load in to the game world, and when we finish a respec
+function Outfitter:TalentsChanged(...)
+	local event, msg = ...
+	if event == "CHAT_MSG_SYSTEM" then 
+		if msg and msg:find("changed to Specialization (.*)%.") then 
+			self.EventLib:UnregisterEvent("CHAT_MSG_SYSTEM")
+		else
+			return
+		end
+	end
+--	print("Can DW = "..tostring(CA_IsSpellKnown(46917)))
+	self.CanDualWield2H = CA_IsSpellKnown(46917) -- Ascension doesn't use the talent system.  Allow 2h dw outfits
+--[[
 	if self.PlayerClass == "WARRIOR" then
 		local vNumTalents = GetNumTalents(2)
 		
@@ -1835,6 +1853,7 @@ function Outfitter:TalentsChanged()
 	else
 		self.CanDualWield2H = false
 	end
+	]]
 end
 
 function Outfitter:SetScript(pOutfit, pScript)
@@ -4051,10 +4070,11 @@ function Outfitter:ItemUsesBothWeaponSlots(pItem)
 		self:DebugTable(pItem, "pItem")
 		self:DebugStack()
 	end
-	
+
 	local vIsDualWieldable2H = pItem.SubType == Outfitter.LBI["Two-Handed Axes"]
 	                        or pItem.SubType == Outfitter.LBI["Two-Handed Maces"]
 	                        or pItem.SubType == Outfitter.LBI["Two-Handed Swords"]
+							or pItem.SubType == Outfitter.LBI["Staves"] -- Ascension patch for dw stave+offhand
 	
 	return not vIsDualWieldable2H
 end
@@ -5337,7 +5357,9 @@ function Outfitter:Initialize()
 	
 	self.EventLib:RegisterEvent("CHARACTER_POINTS_CHANGED", self.TalentsChanged, self)
 	self.EventLib:RegisterEvent("PLAYER_TALENT_UPDATE", self.TalentsChanged, self)
-	
+
+	self.EventLib:RegisterEvent("COMMENTATOR_SKIRMISH_QUEUE_REQUEST", self.SpecChangeStarted, self) -- ascension event for spec changes
+
 	self:TalentsChanged()
 	
 	-- Patch GameTooltip so we can monitor hide/show events

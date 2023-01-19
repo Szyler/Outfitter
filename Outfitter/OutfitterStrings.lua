@@ -36,6 +36,7 @@ Outfitter.cScriptCategoryName = {}
 Outfitter.cScriptCategoryName.PVP = "PvP"
 Outfitter.cScriptCategoryName.TRADE = "Activities"
 Outfitter.cScriptCategoryName.GENERAL = "General"
+Outfitter.cScriptCategoryName.SPEC = "Spec"
 Outfitter.cScriptCategoryName.QUEST = "Questing"
 Outfitter.cScriptCategoryName.ENTERTAIN = "Entertainment"
 
