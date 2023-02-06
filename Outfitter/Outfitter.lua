@@ -282,8 +282,6 @@ Outfitter.CurrentInventoryOutfit = nil
 
 Outfitter.EquippedNeedsUpdate = false
 Outfitter.LastEquipmentUpdateTime = 0
-Outfitter.EquipmentManagerSetChanged = false
-Outfitter.EquipmentManagerSetName = ""
 
 Outfitter.SpecialState = {} -- The current state as determined by the engine, not necessarily the state of the outfit itself
 
@@ -3144,15 +3142,8 @@ function Outfitter:WearOutfitByName(pOutfitName, pLayerID)
 		self:ErrorMessage("Couldn't find outfit named %s", pOutfitName)
 		return
 	end
-	-- UseEquipmentSet(pOutfitName)
+	
 	self:WearOutfit(vOutfit, pLayerID)
-	-- if self:IsOpen() then
-	-- 	-- if self.OutfitStack:IsTopmostOutfit(pOutfit) then
-	-- 		self:SelectOutfit(pOutfit)
-	-- 	-- else
-	-- 		-- self:ClearSelection()
-	-- 	-- end
-	-- end
 end
 
 function Outfitter:RemoveOutfitByName(pOutfitName, pLayerID)
@@ -3163,15 +3154,7 @@ function Outfitter:RemoveOutfitByName(pOutfitName, pLayerID)
 		return
 	end
 	
-	-- UseEquipmentSet("naked")
 	self:RemoveOutfit(vOutfit)
-	-- if self:IsOpen() then
-	-- 	-- if self.OutfitStack:IsTopmostOutfit(pOutfit) then
-	-- 		self:SelectOutfit(pOutfit)
-	-- 	-- else
-	-- 		-- self:ClearSelection()
-	-- 	-- end
-	-- end
 end
 
 function Outfitter:WearOutfitNow(pOutfit, pLayerID, pCallerIsScript)
@@ -3180,54 +3163,18 @@ function Outfitter:WearOutfitNow(pOutfit, pLayerID, pCallerIsScript)
 	self:EndEquipmentUpdate(nil, true)
 end
 
-function Outfitter:registerEquipmentManagerSwap(...)
-	local event, _, swappedToEquipmentSetName = ...
-	if event == "EQUIPMENT_SWAP_FINISHED" then 
-		if swappedToEquipmentSetName and swappedToEquipmentSetName == self.EquipmentManagerSetName then 
-			self.EventLib:UnregisterEvent("EQUIPMENT_SWAP_FINISHED")
-			self.EquipmentManagerSetChanged = true
-		else
-			return
-		end
-	end
-end
-
 function Outfitter:WearOutfit(pOutfit, pLayerID, pCallerIsScript)
-	self:BeginEquipmentUpdate()
-
-	self.EquipmentManagerSetChanged = false
-	self.EquipmentManagerSetName = pOutfit:GetName()
-
-	for i = 1, 20 do
-		if GetEquipmentSetInfo(i) == pOutfit:GetName() then
-			UseEquipmentSet(pOutfit:GetName())
-			if self:IsOpen() then
-				self:SelectOutfit(pOutfit)
-			end
-			return
-		else
-			if self:IsOpen() then
-				if self.OutfitStack:IsTopmostOutfit(pOutfit) then
-					self:SelectOutfit(pOutfit)
-				else
-					self:ClearSelection()
-				end
-			end
-		end
+	if pOutfit.StoredInEM then
+		UseEquipmentSet(pOutfit:GetName())
+	else
+		self:BeginEquipmentUpdate()
+		-- Update the equipment
+		
+		pOutfit.didEquip = pCallerIsScript
+		pOutfit.didUnequip = false
+		
+		self.EquippedNeedsUpdate = true
 	end
-
-
-	-- self.EventLib:RegisterEvent("EQUIPMENT_SWAP_FINISHED", self.registerEquipmentManagerSwap, self)
-
-	-- if not self.EquipmentManagerSetChanged then
-	-- 	return
-	-- end
-	-- Update the equipment
-	
-	pOutfit.didEquip = pCallerIsScript
-	pOutfit.didUnequip = false
-	
-	self.EquippedNeedsUpdate = true
 	
 	-- Add the outfit to the stack
 	
@@ -3258,9 +3205,17 @@ function Outfitter:WearOutfit(pOutfit, pLayerID, pCallerIsScript)
 	-- because the UI can't function correctly if the selected outfit and
 	-- top outfit don't stay the same.
 	
-
+	if self:IsOpen() then
+		if self.OutfitStack:IsTopmostOutfit(pOutfit) then
+			self:SelectOutfit(pOutfit)
+		else
+			self:ClearSelection()
+		end
+	end
 	
-	self:EndEquipmentUpdate("Outfitter:WearOutfit")
+	if not pOutfit.StoredInEM then
+		self:EndEquipmentUpdate("Outfitter:WearOutfit")
+	end
 end
 
 function Outfitter:RemoveOutfitNow(pOutfit, pCallerIsScript)
